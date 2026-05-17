@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform, AnimatePresence } from 'motion/react';
-import { ShoppingCart, Search, Menu, Leaf, ArrowLeft, Star, ChevronDown, Check, X } from 'lucide-react';
+import { ShoppingCart, Search, Menu, Leaf, ArrowLeft, Star, ChevronDown, Check, X, Plus, Minus, Trash2 } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 
 import heroBg from './assets/images/hero_tobacco_bg_1779029674717.png';
@@ -9,12 +9,26 @@ import coffeeProduct from './assets/images/coffee_tobacco_product_1779029728423.
 import hookahProduct from './assets/images/hookah_product_1779029743557.png';
 import craftsmanshipImg from './assets/images/craftsmanship_image_1779029760122.png';
 
-const PRODUCTS = [
+export type Product = {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  priceNumber: number;
+  image: string;
+};
+
+export type CartItem = Product & {
+  quantity: number;
+};
+
+const PRODUCTS: Product[] = [
   {
     id: 1,
     name: "سیگار برگ کوبایی",
     description: "دست‌ساز، با طعمی عمیق و گیرایی بالا برای افراد خاص پسند.",
     price: "۲,۵۰۰,۰۰۰ تومان",
+    priceNumber: 2500000,
     image: cigarProduct,
   },
   {
@@ -22,6 +36,7 @@ const PRODUCTS = [
     name: "توتون پیپ کلاسیک",
     description: "ترکیبی ملایم و شیرین از بهترین مزارع ویرجینیا.",
     price: "۸۵۰,۰۰۰ تومان",
+    priceNumber: 850000,
     image: pipeProduct,
   },
   {
@@ -29,6 +44,7 @@ const PRODUCTS = [
     name: "قهوه و تنباکو پریمیوم",
     description: "بسته‌بندی ویژه کادویی، عصاره‌ای از حس اصالت.",
     price: "۱,۲۰۰,۰۰۰ تومان",
+    priceNumber: 1200000,
     image: coffeeProduct,
   },
   {
@@ -36,6 +52,7 @@ const PRODUCTS = [
     name: "تنباکو قلیان عربی",
     description: "با اسانس طبیعی سیب دوسیب اصل و ماندگاری دود طولانی.",
     price: "۳۵۰,۰۰۰ تومان",
+    priceNumber: 350000,
     image: hookahProduct,
   }
 ];
@@ -61,9 +78,41 @@ export default function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const heroRef = useRef(null);
   
+  const addToCart = (product: Product) => {
+    setCartItems(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const removeFromCart = (id: number) => {
+    setCartItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateQuantity = (id: number, delta: number) => {
+    setCartItems(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = Math.max(1, item.quantity + delta);
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    }));
+  };
+
+  const cartTotal = cartItems.reduce((acc, item) => acc + (item.priceNumber * item.quantity), 0);
+  const cartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fa-IR').format(price) + ' تومان';
+  };
+
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]
@@ -115,7 +164,18 @@ export default function App() {
             </button>
             <button className="relative group" onClick={() => setCartOpen(true)}>
               <ShoppingCart className="w-5 h-5 text-white/70 group-hover:text-white transition-colors" />
-              <span className="absolute -top-2 -right-2 w-4 h-4 bg-[var(--gold-primary)] rounded-full text-black text-[10px] font-bold flex items-center justify-center transform group-hover:scale-110 transition-transform">۲</span>
+              <AnimatePresence>
+                {cartItemCount > 0 && (
+                  <motion.span 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute -top-2 -right-2 w-4 h-4 bg-[var(--gold-primary)] rounded-full text-black text-[10px] font-bold flex items-center justify-center"
+                  >
+                    {new Intl.NumberFormat('fa-IR').format(cartItemCount)}
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </button>
             <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -266,6 +326,7 @@ export default function App() {
                       className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-[var(--gold-primary)] hover:text-black transition-all"
                       onClick={(e) => {
                         e.stopPropagation();
+                        addToCart(product);
                         setCartOpen(true);
                       }}
                     >
@@ -442,30 +503,62 @@ export default function App() {
               </div>
               
               <div className="flex-1 overflow-y-auto py-6 flex flex-col gap-6">
-                {/* Example Cart Item */}
-                <div className="flex gap-4">
-                  <div className="w-20 h-24 rounded-lg bg-[var(--bg-surface)] overflow-hidden flex-shrink-0">
-                    <img src={PRODUCTS[0].image} alt={PRODUCTS[0].name} className="w-full h-full object-cover opacity-80" />
-                  </div>
-                  <div className="flex-1 flex flex-col justify-between py-1">
-                    <div>
-                      <h4 className="text-white text-sm font-medium mb-1">{PRODUCTS[0].name}</h4>
-                      <p className="text-white/50 text-xs">۱ عدد</p>
-                    </div>
-                    <p className="text-[var(--gold-primary)] text-sm font-semibold">{PRODUCTS[0].price}</p>
-                  </div>
-                  <button className="text-white/40 hover:text-white transition-colors self-start">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                {cartItems.length === 0 ? (
+                  <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    className="flex flex-col items-center justify-center h-full text-white/50 gap-4"
+                  >
+                    <ShoppingCart className="w-12 h-12 opacity-20" />
+                    <p>سبد خرید شما خالی است</p>
+                  </motion.div>
+                ) : (
+                  <AnimatePresence>
+                    {cartItems.map((item) => (
+                      <motion.div 
+                        key={item.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex gap-4 group"
+                      >
+                        <div className="w-20 h-24 rounded-lg bg-[var(--bg-surface)] overflow-hidden flex-shrink-0 relative">
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-80" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                        </div>
+                        <div className="flex-1 flex flex-col justify-between py-1">
+                          <div>
+                            <h4 className="text-white text-sm font-medium mb-1 line-clamp-1">{item.name}</h4>
+                            <p className="text-[var(--gold-primary)] text-sm font-semibold">{formatPrice(item.priceNumber)}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button onClick={() => updateQuantity(item.id, -1)} className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:bg-white/10 hover:text-white transition-colors">
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="text-sm font-medium w-4 text-center">{new Intl.NumberFormat('fa-IR').format(item.quantity)}</span>
+                            <button onClick={() => updateQuantity(item.id, 1)} className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[var(--gold-primary)] hover:bg-[var(--gold-primary)]/20 transition-colors">
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                        <button onClick={() => removeFromCart(item.id)} className="text-white/40 hover:text-red-400 transition-colors self-start p-2 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 duration-200">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
               </div>
               
               <div className="pt-6 border-t border-white/10 mt-auto">
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-white/70">جمع کل:</span>
-                  <span className="text-xl font-bold text-[var(--gold-primary)]">۲,۵۰۰,۰۰۰ تومان</span>
+                  <span className="text-2xl font-bold text-[var(--gold-primary)]">{formatPrice(cartTotal)}</span>
                 </div>
-                <button className="btn-gold w-full py-4 rounded-full text-sm">
+                <button 
+                  className={`btn-gold w-full py-4 rounded-full text-sm flex justify-center items-center gap-2 ${cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={cartItems.length === 0}
+                >
                   ثبت سفارش و پرداخت
                 </button>
               </div>
@@ -540,6 +633,7 @@ export default function App() {
                     <div className="flex gap-4">
                       <button 
                         onClick={() => {
+                          addToCart(selectedProduct);
                           setCartOpen(true);
                           setSelectedProduct(null);
                         }}
