@@ -130,6 +130,20 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (selectedProduct || cartOpen || mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = 'var(--removed-body-scrollbar-width, 0px)'; // prevent layout shift if scrollbar hides
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [selectedProduct, cartOpen, mobileMenuOpen]);
+
   return (
     <div className="min-h-screen text-gray-100 bg-[var(--bg-void)] selection:bg-[var(--gold-primary)] selection:text-black">
       {/* Navigation */}
@@ -575,7 +589,7 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 glass-modal z-50 flex items-center justify-center p-4 md:p-6"
+              className="fixed inset-0 glass-modal z-50 flex items-center justify-center p-4 md:p-6 overflow-y-auto"
               onClick={() => setSelectedProduct(null)}
             >
               <motion.div 
@@ -583,16 +597,16 @@ export default function App() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[var(--bg-surface)] border border-white/10 rounded-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row relative shadow-2xl"
+                className="bg-[var(--bg-surface)] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[85vh] md:max-h-[90vh] overflow-y-auto flex flex-col md:flex-row relative shadow-2xl"
               >
                 <button 
                   onClick={() => setSelectedProduct(null)} 
-                  className="absolute top-4 left-4 z-10 w-10 h-10 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-black/80 transition-all"
+                  className="absolute top-4 left-4 z-50 w-10 h-10 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-black/80 transition-all border border-white/10"
                 >
                   <X className="w-5 h-5" />
                 </button>
                 
-                <div className="w-full md:w-1/2 bg-[var(--bg-void)] p-8 md:p-12 flex items-center justify-center relative">
+                <div className="w-full md:w-1/2 bg-[var(--bg-void)] p-6 md:p-12 flex items-center justify-center relative flex-shrink-0">
                   <div className="absolute inset-0 bg-gradient-to-tr from-[var(--gold-primary)]/10 to-transparent opacity-50" />
                   <motion.img 
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -600,11 +614,11 @@ export default function App() {
                     transition={{ delay: 0.2 }}
                     src={selectedProduct.image} 
                     alt={selectedProduct.name}
-                    className="w-full h-auto max-h-[50vh] object-contain relative z-10 drop-shadow-2xl"
+                    className="w-full h-auto max-h-[25vh] md:max-h-[50vh] object-contain relative z-10 drop-shadow-2xl"
                   />
                 </div>
                 
-                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+                <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center">
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -619,8 +633,8 @@ export default function App() {
                       <span className="text-xs text-white/50 mr-2">(۴.۹/۵ از ۱۲۸ نقد)</span>
                     </div>
                     
-                    <h2 className="text-3xl md:text-4xl font-display text-white mb-4 leading-tight">{selectedProduct.name}</h2>
-                    <p className="text-2xl text-[var(--gold-primary)] font-semibold mb-6">{selectedProduct.price}</p>
+                    <h2 className="text-2xl md:text-4xl font-display text-white mb-4 leading-tight">{selectedProduct.name}</h2>
+                    <p className="text-xl md:text-2xl text-[var(--gold-primary)] font-semibold mb-6">{selectedProduct.price}</p>
                     
                     <div className="w-12 h-[1px] bg-white/20 mb-6"></div>
                     
