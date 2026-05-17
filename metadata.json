@@ -1,0 +1,8 @@
+{
+  "name": "Tobacco Premium Commerce",
+  "description": "An elegant, motion-rich e-commerce landing page for tobacco products featuring a dark luxury aesthetic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
