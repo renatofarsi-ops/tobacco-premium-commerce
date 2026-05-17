@@ -555,7 +555,7 @@ export default function App() {
                             </button>
                           </div>
                         </div>
-                        <button onClick={() => removeFromCart(item.id)} className="text-white/40 hover:text-red-400 transition-colors self-start p-2 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 duration-200">
+                        <button onClick={() => removeFromCart(item.id)} className="text-red-500/80 hover:text-red-400 active:text-red-300 transition-colors self-start p-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 -translate-x-0 md:-translate-x-2 md:group-hover:translate-x-0 transition-all duration-200">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </motion.div>
